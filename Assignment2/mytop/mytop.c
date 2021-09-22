@@ -1,4 +1,4 @@
-#include "ps.h"
+#include "mytop.h"
 
 #define COLUMN_CNT 12 //출력할 column 최대 갯수
 

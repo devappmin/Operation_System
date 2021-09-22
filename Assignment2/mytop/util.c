@@ -1,4 +1,4 @@
-#include "ps.h"
+#include "mytop.h"
 
 extern myProc procList[PROCESS_MAX];
 extern int procCnt;
