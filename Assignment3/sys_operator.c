@@ -32,7 +32,6 @@ void separates(char *input, char op, int *left, int *right) {
 
     while (input[pos] != op || pos == 0) {
         leftStr[pos] = input[pos];
-        printk("%c\n", leftStr[pos]);
         pos++;
     }
     opPos = pos++;
@@ -41,37 +40,38 @@ void separates(char *input, char op, int *left, int *right) {
         rightStr[pos - opPos - 1] = input[pos];
         pos++;
     }
-    printk("[%s] [%s]\n", leftStr, rightStr);
+    printk("string : [%s] [%s]\n", leftStr, rightStr);
+    printk("operator : [%c]\n", op);
     *left = atoi(leftStr);
     *right = atoi(rightStr);
-    printk("[%d] [%d]\n", *left, *right);
+    printk("integer: [%d] [%d]\n", *left, *right);
 }
 
 asmlinkage long sys_my_add(char* input) {
     int left, right;
     separates(input, '+', &left, &right);
-    printk("%s\n%d %d\n", input, left, right);
+    printk("Input: %s\nOutput: [left: %d] [right: %d]\n", input, left, right);
     return left + right;
 }
 
 asmlinkage long sys_my_sub(char* input) {
     int left, right;
     separates(input, '-', &left, &right);
-    printk("%s\n%d %d\n", input, left, right);
+    printk("Input: %s\nOutput: [left: %d] [right: %d]\n", input, left, right);
     return left - right;
 }
 
 asmlinkage long sys_my_mul(char* input) {
     int left, right;
     separates(input, '*', &left, &right);
-    printk("%s\n%d %d\n", input, left, right);
+    printk("Input: %s\nOutput: [left: %d] [right: %d]\n", input, left, right);
     return left * right;
 }
 
 asmlinkage long sys_my_mod(char* input) {
     int left, right;
     separates(input, '%', &left, &right);
-    printk("%s\n%d %d\n", input, left, right);
+    printk("Input: %s\nOutput: [left: %d] [right: %d]\n", input, left, right);
     return (int)left % (int)right;
 }
 
