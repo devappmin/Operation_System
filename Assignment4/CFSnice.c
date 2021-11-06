@@ -18,7 +18,7 @@ int main() {
     for (int i = 0; i < PROCESS_COUNT; i++) {
         if((pid = fork()) == 0) {
             ret = setpriority(PRIO_PROCESS, pid, separateNice(i));
-            printf("CREATE PROCESS: %d\n", getpid());
+            printf("CREATE PROCESS: %d\tNICE: %d\n", getpid(), getpriority(PRIO_PROCESS, pid));
             hardJob();
             exit(0);
         }
@@ -30,7 +30,7 @@ int main() {
             retval = waitpid(-1, &status, 0);
             printf("FINISHED PROCESS: %d\n", retval);
         }
-        printf("ALL PROCESS HAVE BEEN FINISHED\n");
+        printf("ALL PROCESSES HAVE BEEN FINISHED\n");
     }
 
     return 0;

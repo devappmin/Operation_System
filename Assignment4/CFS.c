@@ -25,7 +25,7 @@ int main() {
             retval = waitpid(-1, &status, 0);
             printf("[*] FINISHED PROCESS: %d\n", retval);
         }
-        printf("[!] ALL PROCESS HAVE BEEN FINISHED\n");
+        printf("[!] ALL PROCESSES HAVE BEEN FINISHED\n");
     }
 
     return 0;
