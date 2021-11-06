@@ -31,15 +31,12 @@ int main() {
         printf(">> ");
         scanf("%s", buf);
 
-        if((op = findOperator(buf, strlen(buf))) == -1) {
+        if((op = findOperator(buf, strlen(buf) + 1)) == -1) {
             printf("Undefined Opeator\n");
             continue;
         }
 
-        if(syscall(op, buf, &result, strlen(buf)) != 1) {
-            printf("ERROR!\n");
-            continue;
-        }
+        syscall(op, buf, &result, strlen(buf) + 1);
         printf("%ld\n", result);
     }
 
