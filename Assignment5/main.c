@@ -12,15 +12,15 @@ static const char* METHOD[] = {"OPT", "FIFO", "LRU", "Second-Chance"};
 int readFile(FILE* fp, int* frameLength, int* prs);
 void readLine(char* buffer, int size, FILE* fp);
 void printHeader(int frameLength, const char* method, int prsLength, int* prs);
-void printColumn(int time, int frameLength, int* frame, bool pageFault);
+void printRow(int time, int frameLength, int* frame, bool pageFault);
 void printFooter(int totalPageFaults);
-bool fifoColumn(int time, int* pos, int* frame, int frameLength, int prsInput);
+bool fifoRow(int time, int* pos, int* frame, int frameLength, int prsInput);
 void fifo(int frameLength, int prsLength, int* prs);
-bool optimalColumn(int pos, int* frame, int frameLength, int prsLength, int* prs);
+bool optimalRow(int pos, int* frame, int frameLength, int prsLength, int* prs);
 void optimal(int frameLength, int prsLength, int* prs);
-bool lruColumn(int pos, int* frame, int frameLength, int* prs);
+bool lruRow(int pos, int* frame, int frameLength, int* prs);
 void lru(int frameLength, int prsLength, int* prs);
-bool secondChanceColumn(int time, int* pos, int* ref, int* frame, int frameLength, int prsInput);
+bool secondChanceRow(int time, int* pos, int* ref, int* frame, int frameLength, int prsInput);
 void secondChance(int frameLength, int prsLength, int* prs);
 
 int main() {
@@ -40,13 +40,11 @@ int main() {
 
     int prsLength = readFile(fp, &frameLength, prs);
 
-    // int frame[3] = {1, 2, 3};
-    // printHeader(frameLength, METHOD[2], prsLength, prs);
-    // printColumn(1, frameLength, frame, true);
-    // fifo(frameLength, prsLength, prs);
-    // optimal(frameLength, prsLength, prs);
-    // lru(frameLength, prsLength, prs);
+    fifo(frameLength, prsLength, prs);
+    optimal(frameLength, prsLength, prs);
+    lru(frameLength, prsLength, prs);
     secondChance(frameLength, prsLength, prs);
+
     fclose(fp);
     return 0;
 }
@@ -79,7 +77,7 @@ void readLine(char* buffer, int size, FILE* fp) {
 
 void printHeader(int frameLength, const char* method, int prsLength, int* prs) {
     // Line: 1
-    printf("Used method : %s\n", method);
+    printf("\n\nUsed method : %s\n", method);
 
     // Line: 2
     printf("page reference string : ");
@@ -97,7 +95,7 @@ void printHeader(int frameLength, const char* method, int prsLength, int* prs) {
     printf("time\n");
 }
 
-void printColumn(int time, int frameLength, int* frame, bool pageFault) {
+void printRow(int time, int frameLength, int* frame, bool pageFault) {
     printf("%d\t\t", time);
 
     for (int i = 0; i < frameLength; i++) {
@@ -112,7 +110,7 @@ void printFooter(int totalPageFaults) {
     printf("Number of page faults : %d times\n", totalPageFaults);
 }
 
-bool fifoColumn(int time, int* pos, int* frame, int frameLength, int prsInput) {
+bool fifoRow(int time, int* pos, int* frame, int frameLength, int prsInput) {
     bool pageFault = true;
 
     for (int i = 0; i < frameLength; i++) {
@@ -127,7 +125,7 @@ bool fifoColumn(int time, int* pos, int* frame, int frameLength, int prsInput) {
         frame[(*pos)++] = prsInput;
     }
 
-    printColumn(time, frameLength, frame, pageFault);
+    printRow(time, frameLength, frame, pageFault);
 
     return pageFault;
 }
@@ -142,14 +140,14 @@ void fifo(int frameLength, int prsLength, int* prs) {
     printHeader(frameLength, METHOD[1], prsLength, prs);
 
     for (int i = 0; i < prsLength; i++) {
-        if (fifoColumn(i + 1, &pos, frame, frameLength, prs[i]))
+        if (fifoRow(i + 1, &pos, frame, frameLength, prs[i]))
             totalPageFaults++;
     }
 
     printFooter(totalPageFaults);
 }
 
-bool optimalColumn(int pos, int* frame, int frameLength, int prsLength, int* prs) {
+bool optimalRow(int pos, int* frame, int frameLength, int prsLength, int* prs) {
     bool pageFault = true;
 
     for (int i = 0; i < frameLength; i++) {
@@ -191,7 +189,7 @@ bool optimalColumn(int pos, int* frame, int frameLength, int prsLength, int* prs
         frame[shortest] = prs[pos];
     }
 
-    printColumn(pos + 1, frameLength, frame, pageFault);
+    printRow(pos + 1, frameLength, frame, pageFault);
 
     return pageFault;
 }
@@ -205,14 +203,14 @@ void optimal(int frameLength, int prsLength, int* prs) {
     printHeader(frameLength, METHOD[0], prsLength, prs);
 
     for (int i = 0; i < prsLength; i++) {
-        if (optimalColumn(i, frame, frameLength, prsLength, prs))
+        if (optimalRow(i, frame, frameLength, prsLength, prs))
             totalPageFaults++;
     }
 
     printFooter(totalPageFaults);
 }
 
-bool lruColumn(int pos, int* frame, int frameLength, int* prs) {
+bool lruRow(int pos, int* frame, int frameLength, int* prs) {
     bool pageFault = true;
 
     for (int i = 0; i < frameLength; i++) {
@@ -245,7 +243,7 @@ bool lruColumn(int pos, int* frame, int frameLength, int* prs) {
         frame[least] = prs[pos];
     }
 
-    printColumn(pos + 1, frameLength, frame, pageFault);
+    printRow(pos + 1, frameLength, frame, pageFault);
 
     return pageFault;
 }
@@ -256,16 +254,16 @@ void lru(int frameLength, int prsLength, int* prs) {
 
     int totalPageFaults = 0;
 
-    printHeader(frameLength, METHOD[0], prsLength, prs);
+    printHeader(frameLength, METHOD[2], prsLength, prs);
 
     for (int i = 0; i < prsLength; i++) {
-        if (lruColumn(i, frame, frameLength, prs)) totalPageFaults++;
+        if (lruRow(i, frame, frameLength, prs)) totalPageFaults++;
     }
 
     printFooter(totalPageFaults);
 }
 
-bool secondChanceColumn(int time, int* pos, int* ref, int* frame, int frameLength, int prsInput) {
+bool secondChanceRow(int time, int* pos, int* ref, int* frame, int frameLength, int prsInput) {
     bool pageFault = true;
 
     for (int i = 0; i < frameLength; i++) {
@@ -290,7 +288,7 @@ bool secondChanceColumn(int time, int* pos, int* ref, int* frame, int frameLengt
         frame[(*pos)++] = prsInput;
     }
 
-    printColumn(time, frameLength, frame, pageFault);
+    printRow(time, frameLength, frame, pageFault);
 
     return pageFault;
 }
@@ -303,10 +301,10 @@ void secondChance(int frameLength, int prsLength, int* prs) {
     int pos = 0;
     int totalPageFaults = 0;
 
-    printHeader(frameLength, METHOD[1], prsLength, prs);
+    printHeader(frameLength, METHOD[3], prsLength, prs);
 
     for (int i = 0; i < prsLength; i++) {
-        if (secondChanceColumn(i + 1, &pos, ref, frame, frameLength, prs[i]))
+        if (secondChanceRow(i + 1, &pos, ref, frame, frameLength, prs[i]))
             totalPageFaults++;
     }
 
