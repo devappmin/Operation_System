@@ -123,8 +123,6 @@ void printPerTimes() {
     if (threadData.passed != NULL_VEHICLE)
         printf("%d", threadData.passed);
 
-    printf("\nProgressing Vehicle\nCar %c", threadData.onProgress == -1 ? ' ' : (threadData.onProgress + '0'));
-
     printf("\nWaiting Vehicle\nCar");
     if (threadData.waitLength != NULL_VEHICLE)
         printNode(threadData.waiting);
