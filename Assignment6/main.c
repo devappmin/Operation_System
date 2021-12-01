@@ -1,5 +1,6 @@
 #include <pthread.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -142,35 +143,10 @@ bool isAllLoaded() {
 }
 
 void* threadJob(void* arg) {
-    int threadNum = (int)arg + 1;
+    int threadNum = (intptr_t)arg + 1;
 
     while (!isFinished()) {
         pthread_mutex_lock(&mutexLock);
-
-        // if (threadNum == threadData.vehicleList[threadData.totalLoaded]) {
-        //     addNode(threadData.waiting, threadNum);
-        //     threadData.waitLength++;
-
-        //     if (threadData.waitLength == 1) {
-        //         int wait = getNode(threadData.waiting, 0);
-
-        //         if (wait == threadNum) {
-        //             threadData.passed = threadData.onProgress;
-
-        //             if (threadData.onProgress == NULL_VEHICLE || threadData.onProgress == possible[wait])
-        //                 threadData.onProgress = popNode(threadData.waiting, 0);
-        //             else
-        //                 threadData.onProgress = NULL_VEHICLE;
-        //         }
-        //     } else if (threadData.waitLength >= 2) {
-        //         int recently = getNode(threadData.waiting, threadData.waitLength);
-
-        //         if (recently == threadNum) {
-        //             if (threadData.onProgress == possible[recently]) {
-        //             }
-        //         }
-        //     }
-        // }
 
         if (threadNum == threadData.vehicleList[threadData.totalLoaded]) {
             // 실질적으로 움직이는 부분
@@ -301,7 +277,7 @@ void run(pthread_t* tid, int vehicleLength, int* vehicleList) {
     for (int i = 0; i < THREAD_LENGTH; i++) {
         char threadName[10];
         sprintf(threadName, "THREAD %d", i);
-        pthread_create(&tid[i], NULL, threadJob, (void*)i);
+        pthread_create(&tid[i], NULL, threadJob, (void*)(intptr_t)i);
     }
     for (int i = 0; i < THREAD_LENGTH; i++) {
         pthread_join(tid[i], (void*)&rc);
@@ -315,16 +291,14 @@ int main() {
     pthread_mutex_init(&mutexLock, NULL);
 
     // Get vehicle Length
-    // int vehicleLength;
-    // scanf("%d", &vehicleLength);
-    int vehicleLength = 10;
+    int vehicleLength;
+    printf("INPUT NUMBER OF VEHICLE : ");
+    scanf("%d", &vehicleLength);
 
     // Get vehicle List
-    // int* vehicleList = (int*)malloc(sizeof(int) * vehicleLength);
-    // for (int i = 0; i < vehicleLength; i++)
-    //     vehicleList[i] = rand() % 4 + 1;
-
-    int vehicleList[10] = {4, 4, 3, 4, 1, 2, 2, 3, 3, 3};
+    int* vehicleList = (int*)malloc(sizeof(int) * vehicleLength);
+    for (int i = 0; i < vehicleLength; i++)
+        vehicleList[i] = rand() % 4 + 1;
 
     // Create thread List
     pthread_t tid[THREAD_LENGTH];
