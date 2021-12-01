@@ -5,6 +5,7 @@
 #include <time.h>
 
 #define NULL_VEHICLE -1
+#define FINISHED -3
 #define THREAD_LENGTH 4
 
 typedef struct WaitNode {
@@ -72,6 +73,16 @@ int popNode(WaitNode* head, int pos) {
     return result;
 }
 
+int getNode(WaitNode* head, int pos) {
+    WaitNode* cur = head;
+
+    for (int i = 0; i < pos; i++) {
+        cur = cur->node;
+    }
+
+    return cur->node->data;
+}
+
 int getPosNode(WaitNode* head, int value) {
     int result = -1;
     WaitNode* cur = head;
@@ -111,8 +122,6 @@ void printPerTimes() {
     if (threadData.passed != NULL_VEHICLE)
         printf("%d", threadData.passed);
 
-    printf("\nProgressing Vehicle\nCar %c", threadData.onProgress == -1 ? ' ' : (threadData.onProgress + '0'));
-
     printf("\nWaiting Vehicle\nCar");
     if (threadData.waitLength != NULL_VEHICLE)
         printNode(threadData.waiting);
@@ -128,19 +137,6 @@ void printFooter() {
     printf("Total time : %d ticks\n", threadData.time);
 }
 
-// void printPerTimes(int tick, int passed, int* waiting, int waitLength) {
-//     printf("tick : %d\n", tick);
-//     printf("=======================\n");
-//     printf("Passed Vehicle\nCar ");
-//     if (passed != NULL_VEHICLE)
-//         printf("%d", passed);
-//     printf("\nWaiting Vehicle\nCar ");
-//     if (waitLength != NULL_VEHICLE)
-//         for (int i = 0; i < waitLength; i++)
-//             printf("%d ", waiting[i]);
-//     printf("\n=======================\n");
-// }
-
 bool isAllLoaded() {
     return threadData.vehicleLength == threadData.totalLoaded;
 }
@@ -150,6 +146,32 @@ void* threadJob(void* arg) {
 
     while (!isFinished()) {
         pthread_mutex_lock(&mutexLock);
+
+        // if (threadNum == threadData.vehicleList[threadData.totalLoaded]) {
+        //     addNode(threadData.waiting, threadNum);
+        //     threadData.waitLength++;
+
+        //     if (threadData.waitLength == 1) {
+        //         int wait = getNode(threadData.waiting, 0);
+
+        //         if (wait == threadNum) {
+        //             threadData.passed = threadData.onProgress;
+
+        //             if (threadData.onProgress == NULL_VEHICLE || threadData.onProgress == possible[wait])
+        //                 threadData.onProgress = popNode(threadData.waiting, 0);
+        //             else
+        //                 threadData.onProgress = NULL_VEHICLE;
+        //         }
+        //     } else if (threadData.waitLength >= 2) {
+        //         int recently = getNode(threadData.waiting, threadData.waitLength);
+
+        //         if (recently == threadNum) {
+        //             if (threadData.onProgress == possible[recently]) {
+        //             }
+        //         }
+        //     }
+        // }
+
         if (threadNum == threadData.vehicleList[threadData.totalLoaded]) {
             // 실질적으로 움직이는 부분
             if (possible[threadNum] == threadData.onProgress && next == -1) {
@@ -182,72 +204,78 @@ void* threadJob(void* arg) {
             printPerTimes();
 
             if (isAllLoaded()) {
-                next = popNode(threadData.waiting, rand() % threadData.waitLength);
-                threadData.waitLength--;
+                int temp = rand() % threadData.waitLength;
+                int pos = getPosNode(threadData.waiting, possible[threadData.onProgress]);
+                if (threadData.onProgress == NULL_VEHICLE ||
+                    possible[getNode(threadData.waiting, temp)] == threadData.onProgress) {
+                    next = popNode(threadData.waiting, (pos == NULL_VEHICLE ? temp : pos));
+                    threadData.waitLength--;
+                } else {
+                    if (pos == NULL_VEHICLE)
+                        next = getNode(threadData.waiting, temp);
+                    else {
+                        next = popNode(threadData.waiting, pos);
+                        threadData.waitLength--;
+                    }
+                }
             }
 
         } else if (threadNum == next) {
-            if (threadData.waitLength > 0) {
+            if (threadData.waitLength > -1) {
                 threadData.passed = threadData.onProgress;
-                threadData.onProgress = next;
-                next = popNode(threadData.waiting, rand() % threadData.waitLength);
-                threadData.waitLength--;
+                if (threadData.onProgress == possible[next]) {
+                    threadData.onProgress = next;
+
+                } else {
+                    if (threadData.onProgress == NULL_VEHICLE) {
+                        threadData.onProgress = next;
+
+                    } else {
+                        threadData.onProgress = NULL_VEHICLE;
+                    }
+                }
+
                 threadData.time++;
                 printPerTimes();
-            } else {
-                printf("FINISHED");
-                break;
+                if (threadData.passed != NULL_VEHICLE)
+                    threadData.totalPassed[threadData.passed - 1]++;
+
+                if (threadData.onProgress == possible[next] || threadData.onProgress == NULL_VEHICLE) {
+                    if (threadData.waitLength >= 1) {
+                        int pos = getPosNode(threadData.waiting, possible[threadData.onProgress]);
+                        next = popNode(threadData.waiting, (pos == NULL_VEHICLE ? rand() % threadData.waitLength : pos));
+                        threadData.waitLength--;
+                    } else {
+                        next = FINISHED;
+                        pthread_mutex_unlock(&mutexLock);
+                        break;
+                    }
+                } else {
+                    if (threadData.waitLength >= 1) {
+                        int temp = rand() % threadData.waitLength;
+                        int pos = getPosNode(threadData.waiting, threadData.onProgress);
+                        next = getNode(threadData.waiting, temp);
+
+                        if (possible[next] == threadData.onProgress) {
+                            next = popNode(threadData.waiting, (pos == NULL_VEHICLE ? temp : pos));
+                            threadData.waitLength--;
+                        }
+                    }
+                }
             }
-            // if (possible[next] == threadData.onProgress) {
-            //     threadData.passed = threadData.onProgress;
-            //     threadData.onProgress = next;
-            // } else {
-            //     if (threadData.onProgress == NULL_VEHICLE) {
-            //         threadData.passed = threadData.onProgress;
-            //         threadData.onProgress = next;
-            //         threadData.waitLength--;
-            //     } else {
-            //         threadData.onProgress = threadData.onProgress;
-            //         int pos = getPosNode(threadData.waiting, possible[threadData.onProgress]);
-
-            //         if (pos == NULL_VEHICLE)
-            //             threadData.onProgress = NULL_VEHICLE;
-            //         else {
-            //             threadData.onProgress = popNode(threadData.waiting, pos);
-            //             addNode(threadData.waiting, next);
-            //         }
-            //     }
-            // }
-
-            // if (threadData.passed != NULL_VEHICLE)
-            //     threadData.totalPassed[threadData.passed - 1]++;
-
-            // printf("IMHERE");
-            // if (possible[next] == threadData.onProgress) {
-            //     threadData.passed = threadData.onProgress;
-            //     threadData.onProgress = threadNum;
-            // } else {
-            //     if (threadData.onProgress == NULL_VEHICLE) {
-            //         threadData.passed = threadData.onProgress;
-            //         threadData.onProgress = next;
-            //         threadData.waitLength--;
-            //     } else {
-            //         threadData.passed = threadData.onProgress;
-            //         int pos = getPosNode(threadData.waiting, possible[threadData.onProgress]);
-
-            //         threadData.onProgress = (pos == NULL_VEHICLE ? NULL_VEHICLE : next);
-
-            //         if (threadData.onProgress != NULL_VEHICLE)
-            //             threadData.waitLength--;
-            //     }
-            // }
-
-            // if (threadData.passed != NULL_VEHICLE)
-            //     threadData.totalPassed[threadData.passed - 1]++;
+        } else if (next == FINISHED) {
+            pthread_mutex_unlock(&mutexLock);
+            break;
         }
 
         pthread_mutex_unlock(&mutexLock);
     }
+}
+
+void printLast() {
+    threadData.passed = NULL_VEHICLE;
+    threadData.time++;
+    printPerTimes();
 }
 
 void initThreadData(int vehicleLength, int* vehicleList) {
@@ -278,7 +306,7 @@ void run(pthread_t* tid, int vehicleLength, int* vehicleList) {
     for (int i = 0; i < THREAD_LENGTH; i++) {
         pthread_join(tid[i], (void*)&rc);
     }
-
+    printLast();
     printFooter();
 }
 
