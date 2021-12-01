@@ -123,6 +123,8 @@ void printPerTimes() {
     if (threadData.passed != NULL_VEHICLE)
         printf("%d", threadData.passed);
 
+    printf("\nProgressing Vehicle\nCar %c", threadData.onProgress == -1 ? ' ' : (threadData.onProgress + '0'));
+
     printf("\nWaiting Vehicle\nCar");
     if (threadData.waitLength != NULL_VEHICLE)
         printNode(threadData.waiting);
@@ -229,10 +231,10 @@ void* threadJob(void* arg) {
                 } else {
                     if (threadData.waitLength >= 1) {
                         int temp = rand() % threadData.waitLength;
-                        int pos = getPosNode(threadData.waiting, threadData.onProgress);
+                        int pos = getPosNode(threadData.waiting, possible[threadData.onProgress]);
                         next = getNode(threadData.waiting, temp);
 
-                        if (possible[next] == threadData.onProgress) {
+                        if (possible[next] == threadData.onProgress || pos != NULL_VEHICLE) {
                             next = popNode(threadData.waiting, (pos == NULL_VEHICLE ? temp : pos));
                             threadData.waitLength--;
                         }
